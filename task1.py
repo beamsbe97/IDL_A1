@@ -13,7 +13,7 @@ transform = transforms.Compose(
     transforms.Normalize((0.5,),(0.5,))]
 )
 
-batch_size = 4
+batch_size = 64
 
 trainset = torchvision.datasets.FashionMNIST(root='./data', train=True, 
                                             download=True, transform=transform)
