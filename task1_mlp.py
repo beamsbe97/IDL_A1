@@ -46,4 +46,4 @@ mlp_classifier = MLP()
 criterion = nn.CrossEntropyLoss()
 optimiser = optim.Adam(mlp_classifier.parameters(), lr=config["lr"], weight_decay=config["weight_decay"])
 
-train(mlp_classifier, criterion, optimiser, trainLoader, valLoader, testLoader, config)
+train_and_test(mlp_classifier, criterion, optimiser, trainLoader, valLoader, testLoader, config)
