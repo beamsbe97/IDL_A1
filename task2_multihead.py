@@ -70,7 +70,7 @@ val_losses = []
 
 trainLoader, valLoader, testLoader = task2_get_loaders()
 
-for epoch in range(0, config["epoch"]):
+for epoch in range(0, config["epochs"]):
     running_train_loss = 0
     for index, data in enumerate(trainLoader):
         images, hours, minutes = data
