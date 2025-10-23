@@ -27,8 +27,35 @@ class MultiHeadTimeTeller(nn.Module):
             nn.ReLU(),
             nn.MaxPool2d(2,2),
 
-            nn.Conv2d(1, 64, 5),
+            nn.Conv2d(64, 128, 5),
+            nn.ReLU(),
+            nn.MaxPool2d(2,2),
+
+            nn.Conv2d(128, 256, 5),
             nn.ReLU(),
             nn.MaxPool2d(2,2),
             
         ])
+
+        self.flatten = nn.Flatten()
+
+        self.fc_block = nn.Sequential([
+            nn.Linear(256*15*15, 512),
+            nn.ReLU(),
+            nn.Linear(512, 512),
+            nn.ReLU(),
+            nn.Linear(512, 256),
+            nn.ReLU(),
+        ])
+
+        self.classifier_head = nn.Linear(256, 12)
+        self.regressor_head = nn.Linear(256, 1)
+
+    def forward(self, x):
+        x = self.conv_block(x)
+        x = self.flatten(x)
+        x = self.fc_block(x)
+
+        pred_hour = self.classifier_head(x)
+        pred_min = self.regressor_head(x)
+        return pred_hour, pred_min
