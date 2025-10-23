@@ -22,7 +22,7 @@ transform = transforms.Compose([
 class MultiHeadTimeTeller(nn.Module):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.conv_block = nn.Sequential([
+        self.conv_block = nn.Sequential(
             nn.Conv2d(1, 64, 5),
             nn.ReLU(),
             nn.MaxPool2d(2,2),
@@ -35,18 +35,18 @@ class MultiHeadTimeTeller(nn.Module):
             nn.ReLU(),
             nn.MaxPool2d(2,2),
             
-        ])
+        )
 
         self.flatten = nn.Flatten()
 
-        self.fc_block = nn.Sequential([
+        self.fc_block = nn.Sequential(
             nn.Linear(256*15*15, 512),
             nn.ReLU(),
             nn.Linear(512, 512),
             nn.ReLU(),
             nn.Linear(512, 256),
             nn.ReLU(),
-        ])
+        )
 
         self.classifier_head = nn.Linear(256, 12)
         self.regressor_head = nn.Linear(256, 1)
@@ -63,7 +63,7 @@ class MultiHeadTimeTeller(nn.Module):
 model = MultiHeadTimeTeller()
 clf_loss = nn.CrossEntropyLoss()
 reg_loss = nn.MSELoss()
-optimiser = optim.Adam(model.parameters, lr=0.001)
+optimiser = optim.Adam(model.parameters(), lr=0.001)
 
 train_losses = []
 val_losses = []

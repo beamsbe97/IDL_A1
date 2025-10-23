@@ -1,7 +1,7 @@
 import torch
 import os
 from torch import nn
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader, random_split, Dataset
 from torchvision import datasets, transforms
 import torch.optim as optim
 import torchvision
