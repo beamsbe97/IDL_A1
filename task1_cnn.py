@@ -8,6 +8,8 @@ import torchvision
 import torch.nn.functional as F
 import json
 from utils import *
+import numpy as np
+import matplotlib.pyplot as plt
 
 with open('config.json', 'r') as file:
     config = json.load(file)
@@ -51,4 +53,4 @@ cnn_clf = CNN_Classifier()
 criterion = nn.CrossEntropyLoss()
 optimiser = optim.Adam(cnn_clf.parameters(), lr=config["lr"], weight_decay=config["weight_decay"])
 
-train_and_test(cnn_clf, criterion, optimiser, trainLoader, valLoader, testLoader, config)
+train_and_test(cnn_clf, criterion, optimiser, trainLoader, valLoader, testLoader, config, ablation)

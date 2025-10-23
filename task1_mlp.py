@@ -8,6 +8,11 @@ import torchvision
 import json
 import numpy as np
 from utils import *
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+
 with open('config.json', 'r') as file:
     config = json.load(file)
 
@@ -26,9 +31,9 @@ class MLP(nn.Module):
         self.linear_relu = nn.Sequential(
             nn.Linear(28*28, 512),
             nn.ReLU(),
-            nn.Dropout(dropout),
-            nn.Linear(512, 512),
-            nn.ReLU(),
+            # nn.Dropout(dropout),
+            # nn.Linear(512, 512),
+            # nn.ReLU(),
             nn.Dropout(dropout),
             nn.Linear(512, 256),
             nn.ReLU(),
@@ -41,9 +46,27 @@ class MLP(nn.Module):
         logits = self.linear_relu(x)
         return logits
 
-mlp_classifier = MLP()
+ablation="deep"
+colours = ["blue", "orange", "green"]
+lr = [0, 1e-3, 1e-4]
+plt.figure(figsize=(10, 6))
 
-criterion = nn.CrossEntropyLoss()
-optimiser = optim.Adam(mlp_classifier.parameters(), lr=config["lr"], weight_decay=config["weight_decay"])
+for i in range(0, 1):
+    mlp_classifier = MLP()
 
-train_and_test(mlp_classifier, criterion, optimiser, trainLoader, valLoader, testLoader, config)
+    criterion = nn.CrossEntropyLoss()
+    optimiser = optim.Adam(mlp_classifier.parameters(), lr=config["lr"], weight_decay=config["weight_decay"])
+
+
+    train_losses, val_losses = train_and_test(mlp_classifier, criterion, optimiser, trainLoader, valLoader, testLoader, config, ablation)
+    plt.plot(train_losses, label=f"Train (Adam)", color=colours[i])
+    plt.plot(val_losses, label=f"Val (Adam)", color=colours[i],linestyle="--")
+
+
+plt.xlabel("Epoch")
+plt.ylabel("Loss")
+plt.title("MLP Training and Validation Loss")
+plt.legend()
+plt.grid(True)
+plt.savefig(f"mlp_{ablation}.png", dpi=300)
+plt.close()

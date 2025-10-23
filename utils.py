@@ -8,7 +8,7 @@ import torchvision
 import json
 import numpy as np
 
-def train_and_test(model, criterion, optimiser, trainLoader, valLoader, testLoader, config):
+def train_and_test(model, criterion, optimiser, trainLoader, valLoader, testLoader, config, ablation="baseline", l1_multiplier=0):
     train_losses = []
     val_losses = []
     for epoch in range(0, config["epochs"]):
@@ -21,7 +21,7 @@ def train_and_test(model, criterion, optimiser, trainLoader, valLoader, testLoad
             outputs = model(inputs)
             loss = criterion(outputs, labels)
             l1_norm = sum(p.abs().sum() for p in model.parameters())
-            loss = loss + config["l1_multiplier"] * l1_norm
+            loss = loss + l1_multiplier * l1_norm
 
             loss.backward()
             optimiser.step()
@@ -39,9 +39,11 @@ def train_and_test(model, criterion, optimiser, trainLoader, valLoader, testLoad
                 running_val_loss+= loss.item()
 
         val_losses.append(running_val_loss/len(valLoader))
+    
+    #save_plot(train_losses, val_losses, ablation)
 
-    np.save(f"training_data/task1_{config["dataset_name"]}_mlp_train_losses.npy", train_losses)
-    np.save(f"training_data/task1_{config["dataset_name"]}_mlp_val_losses.npy", val_losses)
+    np.save(f"training_data/task1_{config["dataset_name"]}_{ablation}_mlp_train_losses.npy", train_losses)
+    np.save(f"training_data/task1_{config["dataset_name"]}_{ablation}_mlp_val_losses.npy", val_losses)
 
     correct = 0
     total = 0
@@ -58,6 +60,7 @@ def train_and_test(model, criterion, optimiser, trainLoader, valLoader, testLoad
 
 
     print(f'Accuracy of the network on the 10000 test images: {100 * correct // total} %')
+    return train_losses, val_losses
 
 
 

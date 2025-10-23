@@ -1,10 +1,10 @@
 {
-    "lr":1e-3,
-    "weight_decay":1e-4,
-    "l1_multiplier":1e-4,
-    "dropout":0.2, 
+    "lr":1e-2,
+    "weight_decay":0e-2,
+    "l1_multiplier":0e-4,
+    "dropout":0.0, 
     "fc_layers":3,
     "batch_size":64,
     "epochs":20,
-    "dataset_name":"FashionMNIST1"
+    "dataset_name":"FashionMNIST"
 }
