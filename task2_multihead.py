@@ -11,14 +11,21 @@ from utils import *
 import numpy as np
 import matplotlib.pyplot as plt
 
+# Load config
 with open('config.json', 'r') as file:
     config = json.load(file)
 
+# Set device: GPU if available, otherwise CPU
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Using device: {device}")
+
+# Data transform
 transform = transforms.Compose([
     transforms.ToTensor(),
-    transforms.Normalize((0.5,),(0.5,))
+    transforms.Normalize((0.5,), (0.5,))
 ])
 
+# Define model
 class MultiHeadTimeTeller(nn.Module):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -34,7 +41,6 @@ class MultiHeadTimeTeller(nn.Module):
             nn.Conv2d(128, 256, 5),
             nn.ReLU(),
             nn.MaxPool2d(2,2),
-            
         )
 
         self.flatten = nn.Flatten()
@@ -60,7 +66,10 @@ class MultiHeadTimeTeller(nn.Module):
         pred_min = self.regressor_head(x)
         return pred_hour, pred_min
 
-model = MultiHeadTimeTeller()
+# Initialize model and move to device
+model = MultiHeadTimeTeller().to(device)
+
+# Loss and optimizer
 clf_loss = nn.CrossEntropyLoss()
 reg_loss = nn.MSELoss()
 optimiser = optim.Adam(model.parameters(), lr=0.001)
@@ -68,51 +77,63 @@ optimiser = optim.Adam(model.parameters(), lr=0.001)
 train_losses = []
 val_losses = []
 
+# Load data
 trainLoader, valLoader, testLoader = task2_get_loaders()
 
-for epoch in range(0, config["epochs"]):
+# Training loop
+for epoch in range(config["epochs"]):
     running_train_loss = 0
+    model.train()
     for index, data in enumerate(trainLoader):
         images, hours, minutes = data
-        minutes = minutes.unsqueeze(1)
-        optimiser.zero_grad()
+        images, hours, minutes = images.to(device), hours.to(device), minutes.to(device).unsqueeze(1)
 
+        optimiser.zero_grad()
         pred_hour, pred_min = model(images)
         loss = clf_loss(pred_hour, hours) + reg_loss(pred_min, minutes)
         loss.backward()
         optimiser.step()
 
-        running_train_loss+= loss.item()
+        running_train_loss += loss.item()
 
-    train_losses.append(running_train_loss/len(trainLoader))
+    train_losses.append(running_train_loss / len(trainLoader))
 
     running_val_loss = 0
+    model.eval()
     with torch.no_grad():
         for index, data in enumerate(valLoader):
             images, hours, minutes = data
-            minutes = minutes.unsqueeze(1)
+            images, hours, minutes = images.to(device), hours.to(device), minutes.to(device).unsqueeze(1)
+
             pred_hour, pred_min = model(images)
             loss = clf_loss(pred_hour, hours) + reg_loss(pred_min, minutes)
-            running_val_loss+= loss.item()
-    val_losses.append(running_val_loss/len(valLoader))
+            running_val_loss += loss.item()
 
-ablation=""    
+    val_losses.append(running_val_loss / len(valLoader))
+
+# Save training data
+ablation = ""    
 np.save(f"training_data/task2_{ablation}_multihead_train.npy", train_losses)
 np.save(f"training_data/task2_{ablation}_multihead_val.npy", val_losses)
 
+# Evaluation
 correct = 0
 total = 0
-# since we're not training, we don't need to calculate the gradients for our outputs
+model.eval()
+
+label_hours=[]
+label_minutes=[]
 with torch.no_grad():
     for data in testLoader:
-        images, labels = data
-        # calculate outputs by running images through the network
-        outputs = model(images)
-        # the class with the highest energy is what we choose as prediction
-        _, predicted = torch.max(outputs, 1)
-        total += labels.size(0)
-        correct += (predicted == labels).sum().item()
+        images, hours, minutes = data
+        images, hours, minutes = images.to(device), hours.to(device), minutes.to(device)
 
+        outputs_hour, outputs_min = model(images)
+        pred_hour = torch.max(outputs_hour, 1)
+        pred_min = torch.max(outputs_min, 1)
 
-print(f'Accuracy of the network on the 10000 test images: {100 * correct // total} %')
+        mae_minutes = 
+        
+        mae = 
 
+print(f'Accuracy of the network on the test images: {100 * correct / total:.2f}%')
