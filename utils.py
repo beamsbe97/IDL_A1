@@ -43,8 +43,8 @@ def train_and_test(model, criterion, optimiser, trainLoader, valLoader, testLoad
     
     #save_plot(train_losses, val_losses, ablation)
 
-    np.save(f"training_data/task1_{config["dataset_name"]}_{ablation}_mlp_train_losses.npy", train_losses)
-    np.save(f"training_data/task1_{config["dataset_name"]}_{ablation}_mlp_val_losses.npy", val_losses)
+    np.save(f"training_data/task1_{config['dataset_name']}_{ablation}_mlp_train_losses.npy", train_losses)
+    np.save(f"training_data/task1_{config['dataset_name']}_{ablation}_mlp_val_losses.npy", val_losses)
 
     correct = 0
     total = 0
