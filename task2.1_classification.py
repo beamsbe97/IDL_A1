@@ -36,8 +36,8 @@ os.makedirs(RESULTS_DIR, exist_ok=True)
 os.makedirs(PLOTS_DIR, exist_ok=True)
 
 # Load the .npy files
-images = np.load('./data/A1 Data/A1_Data_75/images.npy')
-labels = np.load('./data/A1 Data/A1_Data_75/labels.npy')
+images = np.load('./data/A1 Data/A1_Data_150/images.npy')
+labels = np.load('./data/A1 Data/A1_Data_150/labels.npy')
 
 # We use print statements to keep track of the process
 print(f"Original images shape: {images.shape}")
@@ -173,6 +173,12 @@ class ClockCNN(nn.Module):
             nn.MaxPool2d(kernel_size=2, stride=2) # Reduce input size (4, 4) to (2, 2)
         )
 
+        self.conv_block6 = nn.Sequential(
+            nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2) # Reduce input size (4, 4) to (2, 2)
+        )
+
         # The flattened size is 512 (filters) * 2 * 2 (spatial dims)
         self.classifier = nn.Sequential(
             nn.Flatten(),
@@ -188,6 +194,7 @@ class ClockCNN(nn.Module):
         x = self.conv_block3(x) 
         x = self.conv_block4(x)
         x = self.conv_block5(x)
+        x = self.conv_block6(x) 
         x = self.classifier(x)
         return x
 
@@ -356,7 +363,7 @@ def run_ablation(num_classes, epochs, lr, batch_size):
     print(f"Mean 'Common Sense' Error: {common_sense_error:.2f} minutes")
 
     # Save Individual Text Results
-    results_filename = os.path.join(RESULTS_DIR, f'results_cls_{num_classes}.txt')
+    results_filename = os.path.join(RESULTS_DIR, f'results_cls_150_{num_classes}.txt')
     with open(results_filename, 'w') as f:
         f.write(f"--- Final Test Results (Classification, {num_classes} classes) ---\n")
         f.write(f"Final Train Accuracy: {train_acc:.2f}%\n")
@@ -371,15 +378,15 @@ def run_ablation(num_classes, epochs, lr, batch_size):
     
     plotter.plot_loss_history(
         history_df, 
-        os.path.join(PLOTS_DIR, f'plot_loss_cls_{num_classes}.png')
+        os.path.join(PLOTS_DIR, f'plot_loss_cls_150_{num_classes}.png')
     )
     plotter.plot_accuracy_history(
         history_df,
-        os.path.join(PLOTS_DIR, f'plot_acc_cls_{num_classes}.png')
+        os.path.join(PLOTS_DIR, f'plot_acc_cls_150_{num_classes}.png')
     )
     plotter.plot_confusion_matrix(
         y_test_class, test_predictions, num_classes, 
-        os.path.join(PLOTS_DIR, f'plot_cm_cls_{num_classes}.png')
+        os.path.join(PLOTS_DIR, f'plot_cm_cls_150_{num_classes}.png')
     )
 
     # Return summary for final plot
@@ -413,7 +420,7 @@ def main():
     summary_df = pd.DataFrame(summary_results)
     
     # Save the summary DataFrame
-    summary_csv_path = os.path.join(RESULTS_DIR, 'ablation_summary.csv')
+    summary_csv_path = os.path.join(RESULTS_DIR, 'ablation_summary_150.csv')
     summary_df.to_csv(summary_csv_path, index=False)
     print(f"Saved final ablation summary to '{summary_csv_path}'")
     

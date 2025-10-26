@@ -97,7 +97,7 @@ def plot_summary_results(summary_df, save_dir):
     ax2.set_xscale('log') # Use log scale
 
     plt.tight_layout()
-    save_path = os.path.join(save_dir, 'ablation_summary_plot.png')
+    save_path = os.path.join(save_dir, 'ablation_summary_plot_150.png')
     plt.savefig(save_path)
     plt.close(fig)
     print(f"Saved summary ablation plot to '{save_path}'")
