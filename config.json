@@ -3,7 +3,6 @@
     "weight_decay":0e-2,
     "l1_multiplier":0e-4,
     "dropout":0.2, 
-    "fc_layers":3,
     "batch_size":64,
     "epochs":50,
     "dataset_name":"FashionMNIST"
