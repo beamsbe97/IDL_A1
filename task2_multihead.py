@@ -182,6 +182,6 @@ with torch.no_grad():
     rmse_minutes = torch.sqrt(nn.MSELoss()(pred_minutes, label_minutes))
         
     mae = mae_hours*60 + mae_minutes
-    print(f"Hour accuracy: {100* correct//total_hours}")
+    print(f"Hour accuracy: {100* correct//total_hours}%")
     print(f'TotalMAE: {mae}, Hour MAE :{mae_hours}, Minutes MAE: {mae_minutes}')
     print(f"RMSE minutes: {rmse_minutes}")
