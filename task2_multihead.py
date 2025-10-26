@@ -72,7 +72,7 @@ class MultiHeadTimeTeller(nn.Module):
             nn.ReLU(),
             nn.MaxPool2d(2,2),
 
-            nn.Conv2d(512, 512, 3),
+            nn.Conv2d(256, 512, 3),
             nn.ReLU(),
             nn.MaxPool2d(2,2),
 
