@@ -167,16 +167,12 @@ with torch.no_grad():
         pred_hours.append(pred_hour)
         pred_minutes.append(pred_minutes)
 
-        #concat all the batches of hours and minutes
-        #concat all the batches of predicted hours and minutes
-        #find mae between hours column and minutes column
-
     label_hours = torch.cat(label_hours, dim=0)
-    label_minutes = torch.cat(minutes, dim=0)
+    label_minutes = torch.cat(label_minutes, dim=0)
     pred_hours = torch.cat(hours, dim=0)
     pred_minutes = torch.cat(pred_minutes, dim=0)        
 
         
     mae = nn.L1Loss(label_hours, pred_hours)*60 + nn.MSELoss(label_minutes, pred_minutes)
 
-print(f'RMSE')
+print(f'MAE {mae}')
