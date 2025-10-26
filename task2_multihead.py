@@ -123,6 +123,9 @@ model.eval()
 
 label_hours=[]
 label_minutes=[]
+pred_hours=[]
+pred_minutes=[]
+
 with torch.no_grad():
     for data in testLoader:
         images, hours, minutes = data
@@ -132,14 +135,21 @@ with torch.no_grad():
         pred_hour = torch.max(outputs_hour, 1)
         pred_min = torch.max(outputs_min, 1)
 
-
+        label_hours.append(hours)
+        label_minutes.append(minutes)
+        pred_hours.append(pred_hour)
+        pred_minutes.append(pred_minutes)
 
         #concat all the batches of hours and minutes
         #concat all the batches of predicted hours and minutes
         #find mae between hours column and minutes column
 
-        
-        
-        mae = torch.sqrt(nn.MSELoss())
+    label_hours = torch.cat(label_hours, dim=0)
+    label_minutes = torch.cat(minutes, dim=0)
+    pred_hours = torch.cat(hours, dim=0)
+    pred_minutes = torch.cat(pred_minutes, dim=0)        
 
-print(f'Accuracy of the network on the test images: {100 * correct / total:.2f}%')
+        
+    mae = nn.L1Loss(label_hours, pred_hours)*60 + nn.MSELoss(label_minutes, pred_minutes)
+
+print(f'RMSE')
