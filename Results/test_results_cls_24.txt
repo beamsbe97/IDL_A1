@@ -1,0 +1,4 @@
+--- Final Test Results (Classification, 24 classes) ---
+Test Accuracy: 78.83%
+Test Loss: 0.6011
+Mean 'Common Sense' Error: 27.54 minutes
