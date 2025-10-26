@@ -15,6 +15,20 @@ with open('config.json', 'r') as file:
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
+class ClockDataset(Dataset):
+    def __init__(self, images, labels):
+        self.images = torch.tensor(images, dtype=torch.float32)
+        self.labels = torch.tensor(labels, dtype=torch.float32)
+
+    def __len__(self):
+        return len(self.images)
+
+    def __getitem__(self, idx):
+        x = self.images[idx]             # image tensor
+        y_hour = self.labels[idx, 0].long()    # classification target (hour)
+        y_minute = self.labels[idx, 1].float() # regression target (minute)
+        return x, y_hour, y_minute
+
 def task2_get_loaders():
 
     images = np.load('images.npy')      # shape: (18000, 150, 150)
@@ -26,19 +40,7 @@ def task2_get_loaders():
 
     # Convert labels to tensors
     labels = torch.tensor(labels, dtype=torch.float32)
-    class ClockDataset(Dataset):
-        def __init__(self, images, labels):
-            self.images = torch.tensor(images, dtype=torch.float32)
-            self.labels = torch.tensor(labels, dtype=torch.float32)
 
-        def __len__(self):
-            return len(self.images)
-
-        def __getitem__(self, idx):
-            x = self.images[idx]             # image tensor
-            y_hour = self.labels[idx, 0].long()    # classification target (hour)
-            y_minute = self.labels[idx, 1].float() # regression target (minute)
-            return x, y_hour, y_minute
     dataset = ClockDataset(images, labels)
 
     train_size = int(0.7 * len(dataset))
@@ -163,7 +165,7 @@ with torch.no_grad():
         outputs_hour, pred_min = model(images)
         pred_hour = torch.max(outputs_hour, 1)[1]
         total_hours = hours.size(0)
-        correct+= (pred_hour==hours).sum().item()
+        correct+= (torch.max(outputs_hour, 1)==hours).sum().item()
 
         label_hours.append(hours)
         label_minutes.append(minutes)
