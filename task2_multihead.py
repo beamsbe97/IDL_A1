@@ -62,15 +62,18 @@ class MultiHeadTimeTeller(nn.Module):
         layers = []
         in_ch = 1
         for out_ch in conv_channels:
-            layers.append(nn.Conv2d(in_ch, out_ch, kernel_size=3))
+            layers.append(nn.Conv2d(in_ch, out_ch, kernel_size=3, padding=1))
             layers.append(nn.ReLU())
             layers.append(nn.MaxPool2d(2,2))
             in_ch = out_ch
         self.conv_block = nn.Sequential(*layers)
+        self.adaptive_pool = nn.AdaptiveAvgPool2d((3,3))  # <-- ensures fixed output
         self.flatten = nn.Flatten()
 
+        # compute in_features dynamically
+        in_features = conv_channels[-1]*3*3
+
         fc_layers = []
-        in_features = conv_channels[-1]*3*3  # adjust for final spatial size
         for out_features in fc_sizes:
             fc_layers.append(nn.Linear(in_features, out_features))
             fc_layers.append(nn.ReLU())
@@ -84,9 +87,11 @@ class MultiHeadTimeTeller(nn.Module):
 
     def forward(self, x):
         x = self.conv_block(x)
+        x = self.adaptive_pool(x)  # <-- add adaptive pooling here
         x = self.flatten(x)
         x = self.fc_block(x)
         return self.classifier_head(x), self.regressor_head(x)
+
 
 
 
