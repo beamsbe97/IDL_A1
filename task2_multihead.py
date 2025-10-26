@@ -154,12 +154,16 @@ pred_hours=[]
 pred_minutes=[]
 
 with torch.no_grad():
+    total_hours = 0
+    correct=0
     for data in testLoader:
         images, hours, minutes = data
         images, hours, minutes = images.to(device), hours.to(device), minutes.to(device)
 
         outputs_hour, pred_min = model(images)
         pred_hour = torch.max(outputs_hour, 1)[1]
+        total_hours = hours.size(0)
+        correct+= (pred_hour==hours).sum().item()
 
         label_hours.append(hours)
         label_minutes.append(minutes)
@@ -173,7 +177,9 @@ with torch.no_grad():
 
     mae_hours = nn.L1Loss()(pred_hours.float(), label_hours.float())
     mae_minutes = nn.L1Loss()(pred_minutes, label_minutes)
+    rmse_minutes = torch.sqrt(nn.MSELoss()(pred_minutes, label_minutes))
         
     mae = mae_hours*60 + mae_minutes
-
-print(f'MAE {mae}')
+    print(f"Hour accuracy: {100* correct//total_hours}")
+    print(f'TotalMAE: {mae}, Hour MAE :{mae_hours}, Minutes MAE: {mae_minutes}')
+    print(f"RMSE minutes: {rmse_minutes}")
