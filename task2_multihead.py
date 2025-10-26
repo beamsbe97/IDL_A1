@@ -169,7 +169,7 @@ with torch.no_grad():
 
     label_hours = torch.cat(label_hours, dim=0)
     label_minutes = torch.cat(label_minutes, dim=0)
-    pred_hours = torch.cat(hours, dim=0)
+    pred_hours = torch.cat(pred_hours, dim=0)
     pred_minutes = torch.cat(pred_minutes, dim=0)        
 
         
