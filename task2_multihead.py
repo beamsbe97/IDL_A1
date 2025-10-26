@@ -158,21 +158,22 @@ with torch.no_grad():
         images, hours, minutes = data
         images, hours, minutes = images.to(device), hours.to(device), minutes.to(device)
 
-        outputs_hour, outputs_min = model(images)
-        pred_hour = torch.max(outputs_hour, 1)
-        pred_min = torch.max(outputs_min, 1)
+        outputs_hour, pred_min = model(images)
+        pred_hour = torch.max(outputs_hour, 1)[1]
 
         label_hours.append(hours)
         label_minutes.append(minutes)
         pred_hours.append(pred_hour)
-        pred_minutes.append(pred_minutes)
+        pred_minutes.append(pred_min)
 
     label_hours = torch.cat(label_hours, dim=0)
     label_minutes = torch.cat(label_minutes, dim=0)
     pred_hours = torch.cat(pred_hours, dim=0)
     pred_minutes = torch.cat(pred_minutes, dim=0)        
 
+    mae_hours = nn.L1Loss()(pred_hours.float(), label_hours.float())
+    mae_minutes = nn.L1Loss()(pred_minutes, label_minutes)
         
-    mae = nn.L1Loss(label_hours, pred_hours)*60 + nn.MSELoss(label_minutes, pred_minutes)
+    mae = mae_hours*60 + mae_minutes
 
 print(f'MAE {mae}')
