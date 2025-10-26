@@ -2,16 +2,13 @@ import torch
 import os
 from torch import nn
 from torch.utils.data import DataLoader, random_split
-from torchvision import datasets, transforms
 import torch.optim as optim
-import torchvision
 import torch.nn.functional as F
 import json
 from utils import *
 import numpy as np
-import matplotlib.pyplot as plt
 
-# Load config
+
 with open('config.json', 'r') as file:
     config = json.load(file)
 
@@ -19,13 +16,13 @@ with open('config.json', 'r') as file:
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
-# Data transform
+
 transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize((0.5,), (0.5,))
 ])
 
-# Define model
+
 class MultiHeadTimeTeller(nn.Module):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -66,10 +63,10 @@ class MultiHeadTimeTeller(nn.Module):
         pred_min = self.regressor_head(x)
         return pred_hour, pred_min
 
-# Initialize model and move to device
+
 model = MultiHeadTimeTeller().to(device)
 
-# Loss and optimizer
+
 clf_loss = nn.CrossEntropyLoss()
 reg_loss = nn.MSELoss()
 optimiser = optim.Adam(model.parameters(), lr=0.001)
@@ -77,10 +74,9 @@ optimiser = optim.Adam(model.parameters(), lr=0.001)
 train_losses = []
 val_losses = []
 
-# Load data
+
 trainLoader, valLoader, testLoader = task2_get_loaders()
 
-# Training loop
 for epoch in range(config["epochs"]):
     running_train_loss = 0
     model.train()
