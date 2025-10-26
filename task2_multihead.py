@@ -60,15 +60,23 @@ class MultiHeadTimeTeller(nn.Module):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.conv_block = nn.Sequential(
-            nn.Conv2d(1, 64, 5),
+            nn.Conv2d(1, 64, 3),
             nn.ReLU(),
             nn.MaxPool2d(2,2),
 
-            nn.Conv2d(64, 128, 5),
+            nn.Conv2d(64, 128, 3),
             nn.ReLU(),
             nn.MaxPool2d(2,2),
 
-            nn.Conv2d(128, 256, 5),
+            nn.Conv2d(128, 256, 3),
+            nn.ReLU(),
+            nn.MaxPool2d(2,2),
+
+            nn.Conv2d(512, 512, 3),
+            nn.ReLU(),
+            nn.MaxPool2d(2,2),
+
+            nn.Conv2d(512, 768, 2),
             nn.ReLU(),
             nn.MaxPool2d(2,2),
         )
@@ -76,7 +84,7 @@ class MultiHeadTimeTeller(nn.Module):
         self.flatten = nn.Flatten()
 
         self.fc_block = nn.Sequential(
-            nn.Linear(256*15*15, 512),
+            nn.Linear(768*3*3, 512),
             nn.ReLU(),
             nn.Linear(512, 512),
             nn.ReLU(),
