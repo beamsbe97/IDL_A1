@@ -164,8 +164,8 @@ with torch.no_grad():
 
         outputs_hour, pred_min = model(images)
         pred_hour = torch.max(outputs_hour, 1)[1]
-        total_hours = hours.size(0)
-        correct+= (torch.max(outputs_hour, 1)==hours).sum().item()
+        total_hours += hours.size(0)
+        correct+= (pred_hour==hours).sum().item()
 
         label_hours.append(hours)
         label_minutes.append(minutes)
