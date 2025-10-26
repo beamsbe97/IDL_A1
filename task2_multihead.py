@@ -132,8 +132,14 @@ with torch.no_grad():
         pred_hour = torch.max(outputs_hour, 1)
         pred_min = torch.max(outputs_min, 1)
 
-        mae_minutes = 
+
+
+        #concat all the batches of hours and minutes
+        #concat all the batches of predicted hours and minutes
+        #find mae between hours column and minutes column
+
         
-        mae = 
+        
+        mae = torch.sqrt(nn.MSELoss())
 
 print(f'Accuracy of the network on the test images: {100 * correct / total:.2f}%')
