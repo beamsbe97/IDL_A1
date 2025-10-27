@@ -1,0 +1,5 @@
+--- Final Test Results (Classification, 360 classes) ---
+Final Train Accuracy: 0.68%
+Final Test Accuracy: 0.33%
+Final Test Loss: 5.8586
+Mean 'Common Sense' Error: 178.39 minutes
