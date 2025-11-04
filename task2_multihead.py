@@ -166,7 +166,6 @@ def train_and_evaluate(config, ablation_name="default"):
     return total_mae.item(), accuracy
 
 
-
 def train_and_evaluate(lr, weight_decay, conv_channels, fc_sizes, dropout, ablation_name="default"):
     model = MultiHeadTimeTeller(conv_channels=conv_channels, fc_sizes=fc_sizes, dropout=dropout).to(device)
     clf_loss = nn.CrossEntropyLoss()
@@ -209,6 +208,9 @@ def train_and_evaluate(lr, weight_decay, conv_channels, fc_sizes, dropout, ablat
             images, hours, minutes = images.to(device), hours.to(device), minutes.to(device).unsqueeze(1)
             outputs_hour, outputs_min = model(images)
             pred_hour = torch.max(outputs_hour, 1)[1]
+
+            #to be polished rn still returning the hour diff on the clock. need to change it to dummy hours 
+            pred_hour = [12-abs(pred_hour[i]-label_hours[i]) for i,pred in enumerate(pred_hour) if abs(pred_hour[i]-label_hours[i])>6]
             correct += (pred_hour == hours).sum().item()
             total_hours += hours.size(0)
             label_hours.append(hours)
