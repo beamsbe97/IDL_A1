@@ -210,7 +210,7 @@ def train_and_evaluate(lr, weight_decay, conv_channels, fc_sizes, dropout, ablat
             pred_hour = torch.max(outputs_hour, 1)[1]
 
             #to be polished rn still returning the hour diff on the clock. need to change it to dummy hours 
-            pred_hour = [(label_hours[i]+(12-abs(pred_hour[i]-label_hours[i])))%12 for i,pred in enumerate(pred_hour) if abs(pred_hour[i]-label_hours[i])>6]
+            pred_hour = torch.tensor([(hours[i]+(12-abs(pred_hour[i]-hours[i])))%12 if abs(pred_hour[i]-hours[i])>6 else pred for i,pred in enumerate(pred_hour)], device=device)
             correct += (pred_hour == hours).sum().item()
             total_hours += hours.size(0)
             label_hours.append(hours)
@@ -233,7 +233,7 @@ def train_and_evaluate(lr, weight_decay, conv_channels, fc_sizes, dropout, ablat
     return total_mae.item(), accuracy
 
 
-lrs = [1e-2, 1e-3, 1e-4]
+lrs = [1e-3, 1e-4]
 weight_decays = [0, 1e-4, 1e-3]
 conv_options = [
     [64,128,256],
@@ -244,7 +244,7 @@ fc_options = [
     [512,256],
     [512,512,256]
 ]
-dropouts = [0, 0.2, 0.5]
+dropouts = [0, 0.2]
 
 import itertools
 
