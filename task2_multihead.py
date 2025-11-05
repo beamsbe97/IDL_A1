@@ -14,7 +14,7 @@ with open('config.json', 'r') as file:
 # Set device: GPU if available, otherwise CPU
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
-
+minMAE = float('inf')
 class ClockDataset(Dataset):
     def __init__(self, images, labels):
         self.images = torch.tensor(images, dtype=torch.float32)
@@ -229,38 +229,38 @@ def train_and_evaluate(lr, weight_decay, conv_channels, fc_sizes, dropout, ablat
     total_mae = mae_hours*60 + mae_minutes
     accuracy = 100 * correct / total_hours
     
-
-    np.save(f"training_data/task2_{ablation_name}_train.npy", train_losses)
-    np.save(f"training_data/task2_{ablation_name}_val.npy", val_losses)
+    if total_mae<minMAE:       
+        np.save(f"training_data/task2_{ablation_name}_train.npy", train_losses)
+        np.save(f"training_data/task2_{ablation_name}_val.npy", val_losses)
 
     print(f"{ablation_name} | Total MAE: {total_mae:.4f} | Hour acc: {accuracy:.2f}% | Hour MAE: {mae_hours:.4f} | Minutes MAE: {mae_minutes:.4f}")
     
     return total_mae.item(), accuracy
 
 
-# lrs = [1e-3, 1e-4]
-# weight_decays = [0, 1e-4, 1e-3]
-# conv_options = [
-#     [64,128,256],
-#     [64,128,256,512],
-#     [64,128,256,512,768]
-# ]
-# fc_options = [
-#     [512,256],
-#     [512,512,256]
-# ]
-# dropouts = [0, 0.2]
-
-lrs = [1e-3]
-weight_decays = [1e-3]
+lrs = [1e-3, 1e-4]
+weight_decays = [0, 1e-4, 1e-3]
 conv_options = [
-
+    [64,128,256],
+    [64,128,256,512],
     [64,128,256,512,768]
 ]
 fc_options = [
+    [512,256],
     [512,512,256]
 ]
-dropouts = [0]
+dropouts = [0, 0.2]
+
+# lrs = [1e-3]
+# weight_decays = [1e-3]
+# conv_options = [
+
+#     [64,128,256,512,768]
+# ]
+# fc_options = [
+#     [512,512,256]
+# ]
+# dropouts = [0]
 import itertools
 
 results = {}
