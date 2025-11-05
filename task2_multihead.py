@@ -164,7 +164,7 @@ class MultiHeadTimeTeller(nn.Module):
 #     print(f"Ablation: {ablation_name} | Total MAE: {total_mae:.4f} | Hour acc: {accuracy:.2f}% | Hour MAE: {mae_hours:.4f} | Minutes MAE: {mae_minutes:.4f}")
     
 #     return total_mae.item(), accuracy
-minMAE = float('inf')
+
 
 def train_and_evaluate(lr, weight_decay, conv_channels, fc_sizes, dropout, ablation_name="default"):
     model = MultiHeadTimeTeller(conv_channels=conv_channels, fc_sizes=fc_sizes, dropout=dropout).to(device)
@@ -228,10 +228,10 @@ def train_and_evaluate(lr, weight_decay, conv_channels, fc_sizes, dropout, ablat
     mae_minutes = nn.L1Loss()(pred_minutes, label_minutes)
     total_mae = mae_hours*60 + mae_minutes
     accuracy = 100 * correct / total_hours
-    if total_mae < minMAE:
-        minMAE = total_mae
-        np.save(f"training_data/task2_{ablation_name}_train.npy", train_losses)
-        np.save(f"training_data/task2_{ablation_name}_val.npy", val_losses)
+    
+
+    np.save(f"training_data/task2_{ablation_name}_train.npy", train_losses)
+    np.save(f"training_data/task2_{ablation_name}_val.npy", val_losses)
 
     print(f"{ablation_name} | Total MAE: {total_mae:.4f} | Hour acc: {accuracy:.2f}% | Hour MAE: {mae_hours:.4f} | Minutes MAE: {mae_minutes:.4f}")
     
