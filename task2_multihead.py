@@ -95,76 +95,76 @@ class MultiHeadTimeTeller(nn.Module):
 
 
 
-def train_and_evaluate(config, ablation_name="default"):
-    model = MultiHeadTimeTeller().to(device)
+# def train_and_evaluate(config, ablation_name="default"):
+#     model = MultiHeadTimeTeller().to(device)
 
-    clf_loss = nn.CrossEntropyLoss()
-    reg_loss = nn.MSELoss()
-    optimiser = optim.Adam(model.parameters(), lr=config["lr"], weight_decay=config["weight_decay"])
+#     clf_loss = nn.CrossEntropyLoss()
+#     reg_loss = nn.MSELoss()
+#     optimiser = optim.Adam(model.parameters(), lr=config["lr"], weight_decay=config["weight_decay"])
 
-    trainLoader, valLoader, testLoader = task2_get_loaders()
+#     trainLoader, valLoader, testLoader = task2_get_loaders()
 
-    train_losses, val_losses = [], []
+#     train_losses, val_losses = [], []
 
-    for epoch in range(config["epochs"]):
-        # --- training ---
-        running_train_loss = 0
-        model.train()
-        for images, hours, minutes in trainLoader:
-            images, hours, minutes = images.to(device), hours.to(device), minutes.to(device).unsqueeze(1)
-            optimiser.zero_grad()
-            pred_hour, pred_min = model(images)
-            loss = clf_loss(pred_hour, hours) + reg_loss(pred_min, minutes)
-            loss.backward()
-            optimiser.step()
-            running_train_loss += loss.item()
-        train_losses.append(running_train_loss / len(trainLoader))
+#     for epoch in range(config["epochs"]):
+#         # --- training ---
+#         running_train_loss = 0
+#         model.train()
+#         for images, hours, minutes in trainLoader:
+#             images, hours, minutes = images.to(device), hours.to(device), minutes.to(device).unsqueeze(1)
+#             optimiser.zero_grad()
+#             pred_hour, pred_min = model(images)
+#             loss = clf_loss(pred_hour, hours) + reg_loss(pred_min, minutes)
+#             loss.backward()
+#             optimiser.step()
+#             running_train_loss += loss.item()
+#         train_losses.append(running_train_loss / len(trainLoader))
 
-        # --- validation ---
-        running_val_loss = 0
-        model.eval()
-        with torch.no_grad():
-            for images, hours, minutes in valLoader:
-                images, hours, minutes = images.to(device), hours.to(device), minutes.to(device).unsqueeze(1)
-                pred_hour, pred_min = model(images)
-                loss = clf_loss(pred_hour, hours) + reg_loss(pred_min, minutes)
-                running_val_loss += loss.item()
-        val_losses.append(running_val_loss / len(valLoader))
+#         # --- validation ---
+#         running_val_loss = 0
+#         model.eval()
+#         with torch.no_grad():
+#             for images, hours, minutes in valLoader:
+#                 images, hours, minutes = images.to(device), hours.to(device), minutes.to(device).unsqueeze(1)
+#                 pred_hour, pred_min = model(images)
+#                 loss = clf_loss(pred_hour, hours) + reg_loss(pred_min, minutes)
+#                 running_val_loss += loss.item()
+#         val_losses.append(running_val_loss / len(valLoader))
 
-    # --- save training curve ---
-    np.save(f"training_data/task2_{ablation_name}_train.npy", train_losses)
-    np.save(f"training_data/task2_{ablation_name}_val.npy", val_losses)
+#     # --- save training curve ---
+#     np.save(f"training_data/task2_{ablation_name}_train.npy", train_losses)
+#     np.save(f"training_data/task2_{ablation_name}_val.npy", val_losses)
 
-    # --- evaluation ---
-    model.eval()
-    label_hours, label_minutes, pred_hours, pred_minutes = [], [], [], []
-    correct, total_hours = 0, 0
-    with torch.no_grad():
-        for images, hours, minutes in testLoader:
-            images, hours, minutes = images.to(device), hours.to(device), minutes.to(device).unsqueeze(1)
-            outputs_hour, outputs_min = model(images)
-            pred_hour = torch.max(outputs_hour, 1)[1]
-            correct += (pred_hour == hours).sum().item()
-            total_hours += hours.size(0)
-            label_hours.append(hours)
-            label_minutes.append(minutes)
-            pred_hours.append(pred_hour)
-            pred_minutes.append(outputs_min)
+#     # --- evaluation ---
+#     model.eval()
+#     label_hours, label_minutes, pred_hours, pred_minutes = [], [], [], []
+#     correct, total_hours = 0, 0
+#     with torch.no_grad():
+#         for images, hours, minutes in testLoader:
+#             images, hours, minutes = images.to(device), hours.to(device), minutes.to(device).unsqueeze(1)
+#             outputs_hour, outputs_min = model(images)
+#             pred_hour = torch.max(outputs_hour, 1)[1]
+#             correct += (pred_hour == hours).sum().item()
+#             total_hours += hours.size(0)
+#             label_hours.append(hours)
+#             label_minutes.append(minutes)
+#             pred_hours.append(pred_hour)
+#             pred_minutes.append(outputs_min)
 
-    label_hours = torch.cat(label_hours)
-    label_minutes = torch.cat(label_minutes)
-    pred_hours = torch.cat(pred_hours)
-    pred_minutes = torch.cat(pred_minutes)
+#     label_hours = torch.cat(label_hours)
+#     label_minutes = torch.cat(label_minutes)
+#     pred_hours = torch.cat(pred_hours)
+#     pred_minutes = torch.cat(pred_minutes)
 
-    mae_hours = nn.L1Loss()(pred_hours.float(), label_hours.float())
-    mae_minutes = nn.L1Loss()(pred_minutes, label_minutes)
-    total_mae = mae_hours*60 + mae_minutes
+#     mae_hours = nn.L1Loss()(pred_hours.float(), label_hours.float())
+#     mae_minutes = nn.L1Loss()(pred_minutes, label_minutes)
+#     total_mae = mae_hours*60 + mae_minutes
 
-    accuracy = 100 * correct / total_hours
-    print(f"Ablation: {ablation_name} | Total MAE: {total_mae:.4f} | Hour acc: {accuracy:.2f}% | Hour MAE: {mae_hours:.4f} | Minutes MAE: {mae_minutes:.4f}")
+#     accuracy = 100 * correct / total_hours
+#     print(f"Ablation: {ablation_name} | Total MAE: {total_mae:.4f} | Hour acc: {accuracy:.2f}% | Hour MAE: {mae_hours:.4f} | Minutes MAE: {mae_minutes:.4f}")
     
-    return total_mae.item(), accuracy
-
+#     return total_mae.item(), accuracy
+minMAE = float('inf')
 
 def train_and_evaluate(lr, weight_decay, conv_channels, fc_sizes, dropout, ablation_name="default"):
     model = MultiHeadTimeTeller(conv_channels=conv_channels, fc_sizes=fc_sizes, dropout=dropout).to(device)
@@ -174,6 +174,7 @@ def train_and_evaluate(lr, weight_decay, conv_channels, fc_sizes, dropout, ablat
 
     trainLoader, valLoader, testLoader = task2_get_loaders()
     train_losses, val_losses = [], []
+
 
     for epoch in range(config["epochs"]):
         running_train_loss = 0
@@ -227,25 +228,39 @@ def train_and_evaluate(lr, weight_decay, conv_channels, fc_sizes, dropout, ablat
     mae_minutes = nn.L1Loss()(pred_minutes, label_minutes)
     total_mae = mae_hours*60 + mae_minutes
     accuracy = 100 * correct / total_hours
+    if total_mae < minMAE:
+        minMAE = total_mae
+        np.save(f"training_data/task2_{ablation_name}_train.npy", train_losses)
+        np.save(f"training_data/task2_{ablation_name}_val.npy", val_losses)
 
     print(f"{ablation_name} | Total MAE: {total_mae:.4f} | Hour acc: {accuracy:.2f}% | Hour MAE: {mae_hours:.4f} | Minutes MAE: {mae_minutes:.4f}")
     
     return total_mae.item(), accuracy
 
 
-lrs = [1e-3, 1e-4]
-weight_decays = [0, 1e-4, 1e-3]
+# lrs = [1e-3, 1e-4]
+# weight_decays = [0, 1e-4, 1e-3]
+# conv_options = [
+#     [64,128,256],
+#     [64,128,256,512],
+#     [64,128,256,512,768]
+# ]
+# fc_options = [
+#     [512,256],
+#     [512,512,256]
+# ]
+# dropouts = [0, 0.2]
+
+lrs = [1e-3]
+weight_decays = [1e-3]
 conv_options = [
-    [64,128,256],
-    [64,128,256,512],
+
     [64,128,256,512,768]
 ]
 fc_options = [
-    [512,256],
     [512,512,256]
 ]
-dropouts = [0, 0.2]
-
+dropouts = [0]
 import itertools
 
 results = {}
