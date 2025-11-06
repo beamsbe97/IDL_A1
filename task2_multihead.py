@@ -14,6 +14,7 @@ with open('config.json', 'r') as file:
 # Set device: GPU if available, otherwise CPU
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
+
 minMAE = float('inf')
 class ClockDataset(Dataset):
     def __init__(self, images, labels):
@@ -24,21 +25,19 @@ class ClockDataset(Dataset):
         return len(self.images)
 
     def __getitem__(self, idx):
-        x = self.images[idx]             # image tensor
-        y_hour = self.labels[idx, 0].long()    # classification target (hour)
-        y_minute = self.labels[idx, 1].float() # regression target (minute)
+        x = self.images[idx]             
+        y_hour = self.labels[idx, 0].long()    
+        y_minute = self.labels[idx, 1].float() 
         return x, y_hour, y_minute
 
 def task2_get_loaders():
 
-    images = np.load('images.npy')      # shape: (18000, 150, 150)
-    labels = np.load('labels.npy')      # shape: (18000, 2)
+    images = np.load('images.npy')      
+    labels = np.load('labels.npy')      
 
-    # Convert to float32 and add channel dimension for PyTorch (C, H, W)
-    images = images.astype(np.float32) / 255.0   # normalize to [0,1]
-    images = np.expand_dims(images, axis=1)      # shape: (18000, 1, 150, 150)
+    images = images.astype(np.float32) / 255.0   
+    images = np.expand_dims(images, axis=1)      
 
-    # Convert labels to tensors
     labels = torch.tensor(labels, dtype=torch.float32)
 
     dataset = ClockDataset(images, labels)
@@ -67,10 +66,10 @@ class MultiHeadTimeTeller(nn.Module):
             layers.append(nn.MaxPool2d(2,2))
             in_ch = out_ch
         self.conv_block = nn.Sequential(*layers)
-        self.adaptive_pool = nn.AdaptiveAvgPool2d((3,3))  # <-- ensures fixed output
+        self.adaptive_pool = nn.AdaptiveAvgPool2d((3,3))  #ensures fixed output
         self.flatten = nn.Flatten()
 
-        # compute in_features dynamically
+        #compute in_features dynamically
         in_features = conv_channels[-1]*3*3
 
         fc_layers = []
@@ -87,83 +86,10 @@ class MultiHeadTimeTeller(nn.Module):
 
     def forward(self, x):
         x = self.conv_block(x)
-        x = self.adaptive_pool(x)  # <-- add adaptive pooling here
+        x = self.adaptive_pool(x)
         x = self.flatten(x)
         x = self.fc_block(x)
         return self.classifier_head(x), self.regressor_head(x)
-
-
-
-
-# def train_and_evaluate(config, ablation_name="default"):
-#     model = MultiHeadTimeTeller().to(device)
-
-#     clf_loss = nn.CrossEntropyLoss()
-#     reg_loss = nn.MSELoss()
-#     optimiser = optim.Adam(model.parameters(), lr=config["lr"], weight_decay=config["weight_decay"])
-
-#     trainLoader, valLoader, testLoader = task2_get_loaders()
-
-#     train_losses, val_losses = [], []
-
-#     for epoch in range(config["epochs"]):
-#         # --- training ---
-#         running_train_loss = 0
-#         model.train()
-#         for images, hours, minutes in trainLoader:
-#             images, hours, minutes = images.to(device), hours.to(device), minutes.to(device).unsqueeze(1)
-#             optimiser.zero_grad()
-#             pred_hour, pred_min = model(images)
-#             loss = clf_loss(pred_hour, hours) + reg_loss(pred_min, minutes)
-#             loss.backward()
-#             optimiser.step()
-#             running_train_loss += loss.item()
-#         train_losses.append(running_train_loss / len(trainLoader))
-
-#         # --- validation ---
-#         running_val_loss = 0
-#         model.eval()
-#         with torch.no_grad():
-#             for images, hours, minutes in valLoader:
-#                 images, hours, minutes = images.to(device), hours.to(device), minutes.to(device).unsqueeze(1)
-#                 pred_hour, pred_min = model(images)
-#                 loss = clf_loss(pred_hour, hours) + reg_loss(pred_min, minutes)
-#                 running_val_loss += loss.item()
-#         val_losses.append(running_val_loss / len(valLoader))
-
-#     # --- save training curve ---
-#     np.save(f"training_data/task2_{ablation_name}_train.npy", train_losses)
-#     np.save(f"training_data/task2_{ablation_name}_val.npy", val_losses)
-
-#     # --- evaluation ---
-#     model.eval()
-#     label_hours, label_minutes, pred_hours, pred_minutes = [], [], [], []
-#     correct, total_hours = 0, 0
-#     with torch.no_grad():
-#         for images, hours, minutes in testLoader:
-#             images, hours, minutes = images.to(device), hours.to(device), minutes.to(device).unsqueeze(1)
-#             outputs_hour, outputs_min = model(images)
-#             pred_hour = torch.max(outputs_hour, 1)[1]
-#             correct += (pred_hour == hours).sum().item()
-#             total_hours += hours.size(0)
-#             label_hours.append(hours)
-#             label_minutes.append(minutes)
-#             pred_hours.append(pred_hour)
-#             pred_minutes.append(outputs_min)
-
-#     label_hours = torch.cat(label_hours)
-#     label_minutes = torch.cat(label_minutes)
-#     pred_hours = torch.cat(pred_hours)
-#     pred_minutes = torch.cat(pred_minutes)
-
-#     mae_hours = nn.L1Loss()(pred_hours.float(), label_hours.float())
-#     mae_minutes = nn.L1Loss()(pred_minutes, label_minutes)
-#     total_mae = mae_hours*60 + mae_minutes
-
-#     accuracy = 100 * correct / total_hours
-#     print(f"Ablation: {ablation_name} | Total MAE: {total_mae:.4f} | Hour acc: {accuracy:.2f}% | Hour MAE: {mae_hours:.4f} | Minutes MAE: {mae_minutes:.4f}")
-    
-#     return total_mae.item(), accuracy
 
 
 def train_and_evaluate(lr, weight_decay, conv_channels, fc_sizes, dropout, ablation_name="default"):
@@ -189,7 +115,7 @@ def train_and_evaluate(lr, weight_decay, conv_channels, fc_sizes, dropout, ablat
             running_train_loss += loss.item()
         train_losses.append(running_train_loss / len(trainLoader))
 
-        # validation
+  
         running_val_loss = 0
         model.eval()
         with torch.no_grad():
@@ -200,7 +126,6 @@ def train_and_evaluate(lr, weight_decay, conv_channels, fc_sizes, dropout, ablat
                 running_val_loss += loss.item()
         val_losses.append(running_val_loss / len(valLoader))
 
-    # evaluation
     model.eval()
     label_hours, label_minutes, pred_hours, pred_minutes = [], [], [], []
     correct, total_hours = 0, 0
@@ -210,8 +135,9 @@ def train_and_evaluate(lr, weight_decay, conv_channels, fc_sizes, dropout, ablat
             outputs_hour, outputs_min = model(images)
             pred_hour = torch.max(outputs_hour, 1)[1]
 
-            #to be polished rn still returning the hour diff on the clock. need to change it to dummy hours 
+            #hack to create dummy hour prediction to produce common sense hour difference
             pred_hour = torch.tensor([(hours[i]+(12-abs(pred_hour[i]-hours[i])))%12 if abs(pred_hour[i]-hours[i])>6 else pred for i,pred in enumerate(pred_hour)], device=device)
+            
             correct += (pred_hour == hours).sum().item()
             total_hours += hours.size(0)
             label_hours.append(hours)
@@ -251,16 +177,6 @@ fc_options = [
 ]
 dropouts = [0, 0.2]
 
-# lrs = [1e-3]
-# weight_decays = [1e-3]
-# conv_options = [
-
-#     [64,128,256,512,768]
-# ]
-# fc_options = [
-#     [512,512,256]
-# ]
-# dropouts = [0]
 import itertools
 
 results = {}
