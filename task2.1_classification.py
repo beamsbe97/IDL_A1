@@ -21,7 +21,6 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -47,8 +46,8 @@ print(f"Original labels shape: {labels.shape}")
 images_normalized = images / 255.0
 
 # Shuffle the dataset since it is ordered
-indices = np.arange(images_normalized.shape[0]) # Get the indices   
-np.random.shuffle(indices) # Shuffle them to get a random order of indices
+indices = np.arange(images_normalized.shape[0])    
+np.random.shuffle(indices) 
 images_shuffled = images_normalized[indices] # Re-order the image with the shuffled indices
 labels_shuffled = labels[indices] # Re-order the labels with the shuffled indices
 
@@ -56,50 +55,37 @@ labels_shuffled = labels[indices] # Re-order the labels with the shuffled indice
 X_train, X_temp, y_train, y_temp = train_test_split(images_shuffled, labels_shuffled, test_size=0.2, random_state=42)
 X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
 
-# Let's verify the split by looking at their shapes. The shapes should be 14400/1800/1800 since the total number of images is 18000
+# The shapes should be 14400/1800/1800 since the total number of images is 18000
 print(f"Train set: {X_train.shape}, {y_train.shape}")
 print(f"Validation set: {X_val.shape}, {y_val.shape}")
 print(f"Test set: {X_test.shape}, {y_test.shape}")
 
 def convert_labels(labels, num_classes=24):
-    """
-    Robust conversion of (hour, minute) -> class index.
-    All logic is based on a 12-hour cycle.
-    """
     hour = labels[:, 0].astype(int)
     minute = labels[:, 1].astype(int)
-    hour_mod = hour % 12 # Use 12-hour cycle for all [0, 11]
+    hour_mod = hour % 12 # Use 12-hour cycle for all 
 
     if num_classes == 24:
-        # 12 hours, 2 bins/hr (30-min bins) -> [0, 23]
-        # Max: (11 * 2) + 1 = 23
+        # 30-min bins
         class_labels = hour_mod * 2 + (minute // 30)
         
     elif num_classes == 72:
-        # 12 hours, 6 bins/hr (10-min bins) -> [0, 71]
-        # Max: (11 * 6) + 5 = 71
+        # 10-min bins
         class_labels = hour_mod * 6 + (minute // 10)
     
     elif num_classes == 120:
-        # 12 hours, 10 bins/hr (6-min bins) -> [0, 119]
-        # Max: (11 * 10) + 9 = 119
+        # 6-min bins
         class_labels = hour_mod * 10 + (minute // 6) 
     
     elif num_classes == 360:
-        # 12 hours, 30 bins/hr (2-min bins) -> [0, 359]
-        # Max: (11 * 30) + 29 = 359
+        # 2-min bins
         class_labels = hour_mod * 30 + (minute // 2)
         
     elif num_classes == 720:
-        # 12 hours, 60 bins/hr (1-min bins) -> [0, 719]
-        # Max: (11 * 60) + 59 = 719
+        # 1-min bins
         class_labels = hour_mod * 60 + minute
-        
-    else:
-        raise ValueError(f"Unsupported num_classes: {num_classes}. Please add logic for it.")
 
-    # This safety clip ensures no out-of-bounds errors occur
-    # even if a rare rounding or data issue happens.
+    # Ensure no out-of-bounds errors occur
     class_labels = np.clip(class_labels, 0, num_classes - 1).astype(int)
     
     return class_labels
@@ -120,7 +106,7 @@ class ClockDataset(Dataset):
     def __getitem__(self, idx):
         # Get image and add channel dimension (C, H, W)
         image = self.images[idx]
-        image_with_channel = np.expand_dims(image, axis=0) # (1, 75, 75) because PyTorch expects channel dim first
+        image_with_channel = np.expand_dims(image, axis=0) # (1, 150, 150) because PyTorch expects channel dim first
         
         # Convert image to float tensor
         image_tensor = torch.tensor(image_with_channel, dtype=torch.float32)
@@ -142,41 +128,42 @@ class ClockCNN(nn.Module):
         self.conv_block1 = nn.Sequential(
             nn.Conv2d(in_channels=1, out_channels=32, kernel_size=3, padding=1),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2) # Reduce input size (75, 75) to (37, 37)
+            nn.MaxPool2d(kernel_size=2, stride=2) 
         )
         
         # Convolutional Block 2: Detect mid-level features
         self.conv_block2 = nn.Sequential(
             nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2) # Reduce input size (37, 37) to (18, 18)
+            nn.MaxPool2d(kernel_size=2, stride=2) 
         )
 
         # Convolutional Block 3: Detect high-level features
         self.conv_block3 = nn.Sequential(
             nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, padding=1),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2) # Reduce input size (18, 18) to (9, 9)
+            nn.MaxPool2d(kernel_size=2, stride=2)
         )
 
         # Convolutional Block 4: Deep feature extraction
         self.conv_block4 = nn.Sequential(
             nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, padding=1),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2) # Reduce input size (9, 9) to (4, 4)
+            nn.MaxPool2d(kernel_size=2, stride=2) 
         )
 
         # Convolutional Block 5: Further deep feature extraction
         self.conv_block5 = nn.Sequential(
             nn.Conv2d(in_channels=256, out_channels=512, kernel_size=3, padding=1),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2) # Reduce input size (4, 4) to (2, 2)
+            nn.MaxPool2d(kernel_size=2, stride=2) 
         )
 
+        # Convolutional Block 6: Feature refinement
         self.conv_block6 = nn.Sequential(
             nn.Conv2d(in_channels=512, out_channels=512, kernel_size=3, padding=1),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2) # Reduce input size (4, 4) to (2, 2)
+            nn.MaxPool2d(kernel_size=2, stride=2)
         )
 
         # The flattened size is 512 (filters) * 2 * 2 (spatial dims)
@@ -184,7 +171,6 @@ class ClockCNN(nn.Module):
             nn.Flatten(),
             nn.Linear(in_features=512 * 2 * 2, out_features=128),
             nn.ReLU(),
-            # nn.Dropout(0.5),
             nn.Linear(in_features=128, out_features=num_classes) # Output logits
         )
 
@@ -250,17 +236,15 @@ def evaluate(model, data_loader, criterion, device):
     return avg_loss, accuracy
 
 def calculate_common_sense(y_true, y_pred, num_classes):
-    """
-    Calculates common sense error by mapping predicted class index
-    back to a representative minute value.
-    """
-    # 1. Get true minutes from 0:00 (e.g., 11:59 -> 719)
+    # Get true minutes from 0:00 by multiplying the hour by 60 and then adding on the number of minutes
     true_minutes = y_true[:, 0].astype(int) * 60 + y_true[:, 1].astype(int)
     
-    # 2. Convert predicted class index (y_pred) back to minutes
+    # Convert predicted class index (y_pred) back to minutes
     if num_classes == 24: # 30 min bins
         hour_bin = y_pred // 2
         min_bin = y_pred % 2
+        # The prediction is a bin, not an exact minute.
+        # We add half the number of minutes into the bin to get the fairest prediction when calculating 'common sense' error
         pred_minutes = hour_bin * 60 + min_bin * 30 + 15 # +15 for center of bin
         
     elif num_classes == 72: # 10 min bins
@@ -281,15 +265,12 @@ def calculate_common_sense(y_true, y_pred, num_classes):
     elif num_classes == 720: # 1 min bins
         hour_bin = y_pred // 60
         min_bin = y_pred % 60
-        pred_minutes = hour_bin * 60 + min_bin # No center, it *is* the minute
-        
-    else:
-        raise ValueError(f"Unsupported num_classes: {num_classes} in common sense calc.")
+        pred_minutes = hour_bin * 60 + min_bin # No center, this one predicts the exact minute
 
-    # 3. Calculate absolute difference
+    # Calculate absolute difference
     diff = np.abs(true_minutes - pred_minutes)
     
-    # 4. Handle 12-hour (720 minutes) wraparound
+    # Handle 12-hour (720 minutes) wraparound
     errors = np.minimum(diff, (12 * 60) - diff)
     
     return np.mean(errors), errors
@@ -384,10 +365,6 @@ def run_ablation(num_classes, epochs, lr, batch_size):
         history_df,
         os.path.join(PLOTS_DIR, f'plot_acc_cls_150_{num_classes}.png')
     )
-    plotter.plot_confusion_matrix(
-        y_test_class, test_predictions, num_classes, 
-        os.path.join(PLOTS_DIR, f'plot_cm_cls_150_{num_classes}.png')
-    )
 
     # Return summary for final plot
     return {
@@ -425,7 +402,8 @@ def main():
     print(f"Saved final ablation summary to '{summary_csv_path}'")
     
     # Plot the final summary
-    plotter.plot_summary_results(summary_df, PLOTS_DIR)
+    plotter.plot_summary_accuracy(summary_df, PLOTS_DIR)
+    plotter.plot_summary_error(summary_df, PLOTS_DIR)
     
     print("All tasks finished.")
 
