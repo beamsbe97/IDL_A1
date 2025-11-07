@@ -4,6 +4,6 @@
     "l1_multiplier":0e-4,
     "dropout":0.2, 
     "batch_size":64,
-    "epochs":100,
+    "epochs":50,
     "dataset_name":"FashionMNIST"
 }

@@ -23,22 +23,21 @@ transform = transforms.Compose([
 
 trainLoader, valLoader, testLoader = get_loaders(config["dataset_name"],transform, config["batch_size"])
 
-
 class CNN_Classifier(nn.Module):
     def __init__(self, dropout=config["dropout"]):
         super().__init__()
         self.flatten = nn.Flatten()
-        self.conv1 = nn.Conv2d(1, 6, 5)
+        self.conv1 = nn.Conv2d(1, 32, 5)
         self.pool = nn.MaxPool2d(2,2)
-        self.conv2 = nn.Conv2d(6, 16, 5)
+        self.conv2 = nn.Conv2d(32, 64, 5)
         self.linear_relu = nn.Sequential(
-            nn.Linear(16*4*4, 120),
+            nn.Linear(64*4*4, 120),
             nn.ReLU(),
             nn.Dropout(dropout),
             nn.Linear(120, 84),
             nn.ReLU(),
             nn.Dropout(dropout),
-            nn.Linear(84,10)
+            nn.Linear(84, 10)
         )
 
     def forward(self,x):
@@ -48,9 +47,10 @@ class CNN_Classifier(nn.Module):
         x = self.linear_relu(x)
         return x
 
+
 cnn_clf = CNN_Classifier()
 
 criterion = nn.CrossEntropyLoss()
 optimiser = optim.Adam(cnn_clf.parameters(), lr=config["lr"], weight_decay=config["weight_decay"])
-
+ablation="lr"
 train_and_test(cnn_clf, criterion, optimiser, trainLoader, valLoader, testLoader, config, ablation)

@@ -186,6 +186,6 @@ for lr, wd, conv, fc, do in itertools.product(lrs, weight_decays, conv_options, 
     total_mae, acc = train_and_evaluate(lr, wd, conv, fc, do, ablation_name)
     results[ablation_name] = {"Total MAE": total_mae, "Hour acc": acc}
 
-# Find best model
+
 best_model = min(results, key=lambda k: results[k]["Total MAE"])
 print("Best ablation:", best_model, results[best_model])
